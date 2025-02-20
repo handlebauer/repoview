@@ -1,0 +1,5 @@
+- Use `bun` instead of `npm` or `yarn`
+- Initialize `useRef`s with `null` instead of `undefined` when applicable
+- Do not directly add packages to package.json, instead use `bun add`
+- Name component files with snake-case (with hyphens, not underscores)
+- In Next.js 15, page.tsx files use Promise-based params/searchParams
