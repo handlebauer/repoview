@@ -1,5 +1,9 @@
 import { DurableObject } from 'cloudflare:workers';
-import { Repository, TreeResponse, GitHubContent, GitHubError, GitHubErrorResponse } from './types';
+
+import { Repository, GitHubError } from '@repoview/common';
+import { createCorsResponse, handleCorsPreflightRequest } from './cors';
+
+import type { GitHubContent, TreeResponse, GitHubErrorResponse } from '@repoview/common/types';
 
 export class GitHubRepoDO extends DurableObject<Env> {
 	private state: DurableObjectState;
@@ -138,20 +142,17 @@ export class GitHubRepoDO extends DurableObject<Env> {
 }
 
 export default {
-	/**
-	 * This is the standard fetch handler for a Cloudflare Worker
-	 *
-	 * @param request - The request submitted to the Worker from the client
-	 * @param env - The interface to reference bindings declared in wrangler.jsonc
-	 * @param _ctx - The execution context of the Worker
-	 * @returns The response to be sent back to the client
-	 */
 	async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
 		const url = new URL(request.url);
 		const [route, owner, name] = url.pathname.split('/').filter(Boolean);
 
+		// Handle OPTIONS request for CORS preflight
+		if (request.method === 'OPTIONS') {
+			return handleCorsPreflightRequest(request);
+		}
+
 		if (route !== 'repo' || !owner || !name) {
-			return new Response('Invalid request', { status: 400 });
+			return createCorsResponse(request, 'Invalid request', 400);
 		}
 
 		const id = env.GITHUB_REPO_DO.idFromName(`${owner}/${name}`);
@@ -159,20 +160,12 @@ export default {
 
 		try {
 			const data = await durableObject.getRepoData(owner, name);
-			return new Response(JSON.stringify(data), {
-				headers: { 'Content-Type': 'application/json' },
-			});
+			return createCorsResponse(request, data);
 		} catch (error) {
 			if (error instanceof GitHubError) {
-				return new Response(error.message, {
-					status: error.status,
-					headers: { 'Content-Type': 'application/json' },
-				});
+				return createCorsResponse(request, error.message, error.status);
 			}
-			return new Response(error instanceof Error ? error.message : 'Unknown error', {
-				status: 500,
-				headers: { 'Content-Type': 'application/json' },
-			});
+			return createCorsResponse(request, error instanceof Error ? error.message : 'Unknown error', 500);
 		}
 	},
 } satisfies ExportedHandler<Env>;

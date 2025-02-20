@@ -1,22 +1,7 @@
 import Dexie from 'dexie'
 
+import type { Repository } from '@repoview/common'
 import type { Table } from 'dexie'
-
-export interface Repository {
-    id?: number
-    owner: string
-    name: string
-    branch: string
-    files: Record<string, string>
-    lastUpdated: Date
-    localChanges?: Record<
-        string,
-        {
-            content: string
-            modified: Date
-        }
-    >
-}
 
 export class RepoViewDB extends Dexie {
     repositories!: Table<Repository>
@@ -30,8 +15,6 @@ export class RepoViewDB extends Dexie {
 }
 
 export const db = new RepoViewDB()
-
-export const CACHE_DURATION = 60 * 60 * 1000 // 1 hour
 
 // Simple wrapper to get repository with local changes
 export async function loadLocalRepository(

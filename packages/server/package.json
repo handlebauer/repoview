@@ -1,5 +1,5 @@
 {
-	"name": "server",
+	"name": "@repoview/server",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
@@ -8,6 +8,9 @@
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
 		"cf-typegen": "wrangler types"
+	},
+	"dependencies": {
+		"@repoview/common": "workspace:*"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20250214.0",

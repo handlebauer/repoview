@@ -12,7 +12,7 @@ import {
     saveLocalRepository,
 } from '@/lib/db'
 import { createErrorMessage, parseGitHubError } from '@/lib/errors'
-import { fetchRemoteRepository, onProgress } from '@/lib/github'
+import { fetchRemoteRepository } from '@/lib/github'
 import { GitHubIcon } from '@/components/icons/github'
 
 import './animations.css'
@@ -21,9 +21,7 @@ type LoadingState =
     | { type: 'idle' }
     | {
           type: 'loading'
-          totalFiles: number
-          loadedFiles: number
-          currentFile?: string
+          progress: number
       }
 
 export default function Home() {
@@ -36,26 +34,26 @@ export default function Home() {
     const [isClearing, setIsClearing] = useState(false)
     const [showErrorDialog, setShowErrorDialog] = useState(false)
 
-    // Set up progress listener
+    // Simulated loading progress
     useEffect(() => {
-        const unsubscribe = onProgress(progress => {
-            if (progress.type === 'fresh') {
-                setLoadingState({
-                    type: 'loading',
-                    totalFiles: progress.totalFiles || 0,
-                    loadedFiles: progress.loadedFiles || 0,
-                    currentFile: progress.currentFile,
-                })
-            }
-        })
+        if (loadingState.type !== 'loading') return
 
-        return () => {
-            unsubscribe()
-        }
-    }, [])
+        const interval = setInterval(() => {
+            setLoadingState(current => {
+                if (current.type !== 'loading') return current
+                // Slow down progress as it gets closer to 90%
+                const increment = Math.max(0.5, (90 - current.progress) / 10)
+                const progress = Math.min(90, current.progress + increment)
+                return { type: 'loading', progress }
+            })
+        }, 100)
+
+        return () => clearInterval(interval)
+    }, [loadingState.type])
 
     const handleLoadingStart = async (org: string, repo: string) => {
         setError(null)
+        setLoadingState({ type: 'loading', progress: 0 })
 
         try {
             const cached = !!(await loadLocalRepository(org, repo))
@@ -66,9 +64,16 @@ export default function Home() {
                 await saveLocalRepository(org, repo, 'main', data.files)
             }
 
+            // Complete the progress animation quickly
+            setLoadingState({ type: 'loading', progress: 100 })
+
             // Store cache status in localStorage
             localStorage.setItem(`${org}/${repo}/cached`, String(cached))
-            router.push(`/${org}/${repo}`)
+
+            // Short delay to show completion before navigation
+            setTimeout(() => {
+                router.push(`/${org}/${repo}`)
+            }, 200)
         } catch (err) {
             console.error('Failed to check repository:', err)
             const errorType = parseGitHubError(err, org, repo)
@@ -250,19 +255,12 @@ export default function Home() {
                                                                 <div
                                                                     className="h-full bg-white/20 rounded-full transition-all duration-200 ease-out"
                                                                     style={{
-                                                                        width: `${(loadingState.loadedFiles / loadingState.totalFiles) * 100}%`,
+                                                                        width: `${loadingState.progress}%`,
                                                                     }}
                                                                 />
                                                             </div>
                                                             <span className="text-[13px] text-gray-400 whitespace-nowrap">
-                                                                {
-                                                                    loadingState.loadedFiles
-                                                                }{' '}
-                                                                /{' '}
-                                                                {
-                                                                    loadingState.totalFiles
-                                                                }{' '}
-                                                                files
+                                                                Loading...
                                                             </span>
                                                         </div>
                                                     </div>
