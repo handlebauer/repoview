@@ -5,6 +5,7 @@
       "name": "repoview",
       "devDependencies": {
         "@types/bun": "latest",
+        "prettier": "3.5.1",
       },
       "peerDependencies": {
         "typescript": "^5.0.0",
