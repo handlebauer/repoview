@@ -77,6 +77,42 @@ export class GitHubRepoDO extends DurableObject<Env> {
 		return response.content;
 	}
 
+	private async getFileFromStorage(path: string): Promise<string | null> {
+		const content = await this.state.storage.get<string>(`file:${path}`);
+		return content ?? null;
+	}
+
+	private async storeFile(path: string, content: string): Promise<void> {
+		await this.state.storage.put(`file:${path}`, content);
+	}
+
+	private async getMetadata(): Promise<{
+		owner: string;
+		name: string;
+		branch: string;
+		lastUpdated: Date;
+		fileList: string[];
+	} | null> {
+		const metadata = await this.state.storage.get<{
+			owner: string;
+			name: string;
+			branch: string;
+			lastUpdated: Date;
+			fileList: string[];
+		}>('metadata');
+		return metadata ?? null;
+	}
+
+	private async storeMetadata(metadata: {
+		owner: string;
+		name: string;
+		branch: string;
+		lastUpdated: Date;
+		fileList: string[];
+	}): Promise<void> {
+		await this.state.storage.put('metadata', metadata);
+	}
+
 	async getRepoData(owner: string, name: string): Promise<Repository> {
 		// If there's an active fetch, wait for it
 		if (this.activeFetch) {
@@ -85,11 +121,28 @@ export class GitHubRepoDO extends DurableObject<Env> {
 		}
 
 		// Check cache
-		const data = await this.state.storage.get<Repository>('repoData');
-		const isCacheValid = data && Date.now() - new Date(data.lastUpdated).getTime() <= this.CACHE_DURATION;
-		if (isCacheValid) {
-			console.log('Returning cached data');
-			return data;
+		const metadata = await this.getMetadata();
+		const isCacheValid = metadata && Date.now() - new Date(metadata.lastUpdated).getTime() <= this.CACHE_DURATION;
+		if (isCacheValid && metadata) {
+			console.log('Loading cached data');
+			const files: Record<string, string> = {};
+
+			await Promise.all(
+				metadata.fileList.map(async (path) => {
+					const content = await this.getFileFromStorage(path);
+					if (content !== null) {
+						files[path] = content;
+					}
+				}),
+			);
+
+			return {
+				owner: metadata.owner,
+				name: metadata.name,
+				branch: metadata.branch,
+				lastUpdated: metadata.lastUpdated,
+				files,
+			};
 		}
 
 		// Start new fetch with lock
@@ -108,30 +161,40 @@ export class GitHubRepoDO extends DurableObject<Env> {
 			const treeData = await this.fetchRepoTree(owner, name);
 			const files = treeData.tree.filter((item) => item.type === 'blob');
 			const fileContents: Record<string, string> = {};
+			const fileList: string[] = [];
 
-			// Fetch all file contents in parallel with error handling
+			// Fetch and store files individually
 			await Promise.all(
 				files.map(async (file) => {
 					try {
-						fileContents[file.path] = await this.fetchFileContent(owner, name, file.path);
+						const content = await this.fetchFileContent(owner, name, file.path);
+						await this.storeFile(file.path, content);
+						fileContents[file.path] = content;
+						fileList.push(file.path);
 					} catch (err) {
 						console.error(`Failed to fetch content for ${file.path}:`, err);
-						fileContents[file.path] = `// Failed to load ${file.path}`;
+						const errorMessage = `// Failed to load ${file.path}`;
+						await this.storeFile(file.path, errorMessage);
+						fileContents[file.path] = errorMessage;
+						fileList.push(file.path);
 					}
 				}),
 			);
 
-			const repoData: Repository = {
+			// Store metadata
+			const metadata = {
 				owner,
 				name,
 				branch: 'main',
-				files: fileContents,
 				lastUpdated: new Date(),
+				fileList,
 			};
+			await this.storeMetadata(metadata);
 
-			// Atomic storage operation
-			await this.state.storage.put('repoData', repoData);
-			return repoData;
+			return {
+				...metadata,
+				files: fileContents,
+			};
 		} catch (error) {
 			if (error instanceof GitHubError) {
 				throw error;
