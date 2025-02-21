@@ -6,8 +6,7 @@
         "packages/*"
     ],
     "devDependencies": {
-        "@types/bun": "latest",
-        "prettier": "3.5.1"
+        "@types/bun": "latest"
     },
     "peerDependencies": {
         "typescript": "^5.0.0"
