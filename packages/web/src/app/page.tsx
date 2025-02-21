@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ErrorDialog } from '@/components/error-dialog'
 import { UrlInput } from '@/components/url-input'
@@ -137,10 +138,13 @@ export default function Home() {
             <nav className="relative z-10">
                 <div className="mx-auto max-w-7xl px-6 py-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <Link
+                            href="/"
+                            className="flex items-center gap-2 text-white hover:text-white/90 transition-colors"
+                        >
                             <Code2 className="h-5 w-5" />
                             <span className="font-atkinson">RepoView</span>
-                        </div>
+                        </Link>
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={handleClearDatabase}
@@ -523,8 +527,8 @@ export default function Home() {
                                 </div>
                             </div>
 
-                            {/* Browser Content Preview (cut off) - Adjusted height */}
-                            <div className="h-[calc(100%-600px)] bg-gradient-to-b from-[#1A1B1E] via-[#1A1B1E] to-[#1A1B1E] relative">
+                            {/* Browser Content Preview */}
+                            <div className="relative">
                                 <div className="max-w-3xl mx-auto px-6 py-12 opacity-50">
                                     <div className="flex gap-4">
                                         <div className="w-64 h-32 bg-white/5 rounded-lg"></div>
@@ -546,7 +550,8 @@ export default function Home() {
                                     </div>
                                 </div>
 
-                                <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-[#1A1B1E] via-[#1A1B1E]/50 to-[#1A1B1E]/0"></div>
+                                {/* Fade overlay */}
+                                <div className="absolute inset-x-0 bottom-0 h-64 pointer-events-none bg-gradient-to-b from-transparent via-[#1A1B1E] to-[#1A1B1E]"></div>
                             </div>
                         </div>
 
