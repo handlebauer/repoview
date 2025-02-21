@@ -85,7 +85,7 @@
         "@codemirror/theme-one-dark": "^6.1.2",
         "@codemirror/view": "^6.24.0",
         "@radix-ui/react-dialog": "^1.1.6",
-        "@repoview/codemirror-extensions": "^0.4.3",
+        "@repoview/codemirror-extensions": "workspace:*",
         "@repoview/common": "workspace:*",
         "clsx": "^2.1.1",
         "codemirror": "^6.0.1",
