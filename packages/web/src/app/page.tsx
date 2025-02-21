@@ -165,7 +165,7 @@ export default function Home() {
 
             {/* Main Content */}
             <main className="h-[calc(100vh-56px)] relative overflow-hidden">
-                <div className="mx-auto max-w-7xl px-6 pt-16 h-full">
+                <div className="mx-auto max-w-7xl px-6 pt-48 h-full">
                     {/* Browser Window Mockup */}
                     <div className="relative max-w-4xl mx-auto animate-fade-up h-full">
                         {/* Browser Chrome */}
@@ -523,23 +523,8 @@ export default function Home() {
                                 </div>
                             </div>
 
-                            {/* Instruction Text */}
-                            <div
-                                className={`text-center py-8 px-6 transition-opacity duration-500 ${
-                                    loadingState.type !== 'idle'
-                                        ? 'opacity-0'
-                                        : 'opacity-100'
-                                }`}
-                            >
-                                <p className="text-base text-gray-400 max-w-[340px] mx-auto">
-                                    Instantly explore any GitHub repository with
-                                    a powerful built-in editor. No cloning
-                                    required.
-                                </p>
-                            </div>
-
                             {/* Browser Content Preview (cut off) - Adjusted height */}
-                            <div className="h-[calc(100%-500px)] bg-gradient-to-b from-[#1A1B1E] via-[#1A1B1E] to-[#1A1B1E] relative">
+                            <div className="h-[calc(100%-600px)] bg-gradient-to-b from-[#1A1B1E] via-[#1A1B1E] to-[#1A1B1E] relative">
                                 <div className="max-w-3xl mx-auto px-6 py-12 opacity-50">
                                     <div className="flex gap-4">
                                         <div className="w-64 h-32 bg-white/5 rounded-lg"></div>
