@@ -1,54 +1,45 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { XCircle } from 'lucide-react'
 
 import { config } from '@/lib/config'
 
 interface UrlInputProps {
-    onValidityChange?: (isValid: boolean) => void
-    onLoadingStart?: (org: string, repo: string) => Promise<void>
-    onInputChange?: () => void
+    org: string
+    repo: string
+    onOrgChange: (value: string) => void
+    onRepoChange: (value: string) => void
+    onSubmit: () => Promise<void>
+    error?: string | null
+    onShowError?: () => void
+    isValid: boolean
 }
 
 export function UrlInput({
-    onValidityChange,
-    onLoadingStart,
-    onInputChange,
+    org,
+    repo,
+    onOrgChange,
+    onRepoChange,
+    onSubmit,
+    error,
+    onShowError,
+    isValid,
 }: UrlInputProps) {
-    const [org, setOrg] = useState('')
-    const [repo, setRepo] = useState('')
     const orgInputRef = useRef<HTMLInputElement>(null)
     const repoInputRef = useRef<HTMLInputElement>(null)
-
-    const isValid = org.length > 0 && repo.length > 0
+    const isInitialMount = useRef(true)
 
     useEffect(() => {
-        // Autofocus the org input on mount
-        orgInputRef.current?.focus()
+        // Only focus on initial mount
+        if (isInitialMount.current) {
+            orgInputRef.current?.focus()
+            isInitialMount.current = false
+        }
     }, [])
 
-    useEffect(() => {
-        onValidityChange?.(isValid)
-    }, [isValid, onValidityChange])
-
-    const handleSubmit = async () => {
-        if (isValid && onLoadingStart) {
-            await onLoadingStart(org, repo)
-        }
-    }
-
     const handleOrgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/^\/+/, '')
-        setOrg(value)
-        onInputChange?.()
-
-        // If user types a slash, move to repo input
-        if (value.includes('/')) {
-            const [newOrg, newRepo] = value.split('/')
-            setOrg(newOrg)
-            setRepo(newRepo || '')
-            repoInputRef.current?.focus()
-        }
+        onOrgChange(e.target.value)
     }
 
     const handleOrgKeyDown = async (
@@ -57,66 +48,85 @@ export function UrlInput({
         // If user presses tab or slash, prevent default and move to repo input
         if (e.key === 'Tab' || e.key === '/') {
             e.preventDefault()
+            // Focus without selecting text
             repoInputRef.current?.focus()
+            const length = repoInputRef.current?.value.length || 0
+            repoInputRef.current?.setSelectionRange(length, length)
         } else if (e.key === 'Enter' && isValid) {
             e.preventDefault()
-            await handleSubmit()
+            await onSubmit()
         }
     }
 
     const handleRepoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setRepo(e.target.value)
-        onInputChange?.()
+        onRepoChange(e.target.value)
     }
 
     const handleRepoKeyDown = async (
         e: React.KeyboardEvent<HTMLInputElement>,
     ) => {
-        if (e.key === 'Enter' && isValid) {
+        if (e.key === 'Tab' && e.shiftKey) {
             e.preventDefault()
-            await handleSubmit()
+            // Focus without selecting text
+            orgInputRef.current?.focus()
+            const length = orgInputRef.current?.value.length || 0
+            orgInputRef.current?.setSelectionRange(length, length)
+        } else if (e.key === 'Enter' && isValid) {
+            e.preventDefault()
+            await onSubmit()
         }
     }
 
     return (
         <div className="flex-1 font-mono text-sm sm:text-base flex items-center">
-            <span className="text-gray-400">https://</span>
-            <span className="line-through text-red-400">
-                {config.githubHost}
-            </span>
-            <span className="text-green-400 font-bold">{config.host}</span>
-            <span className="text-gray-400">/</span>
-            <input
-                ref={orgInputRef}
-                type="text"
-                value={org}
-                onChange={handleOrgChange}
-                onKeyDown={handleOrgKeyDown}
-                spellCheck="false"
-                className="bg-transparent text-gray-300 focus:outline-none border-b border-transparent focus:border-white/20 px-0.5 min-w-[3.5ch] w-[var(--org-width,3.5ch)]"
-                style={
-                    {
-                        '--org-width': `${Math.max(3.5, org.length + 0.5)}ch`,
-                    } as React.CSSProperties
-                }
-                placeholder="org"
-            />
-            <span className="text-gray-400">/</span>
-            <input
-                ref={repoInputRef}
-                type="text"
-                value={repo}
-                onChange={handleRepoChange}
-                onKeyDown={handleRepoKeyDown}
-                spellCheck="false"
-                className="bg-transparent text-gray-300 focus:outline-none focus:border-b focus:border-white/20 px-0.5 min-w-[4.5ch] w-[var(--repo-width,4.5ch)]"
-                style={
-                    {
-                        '--repo-width': `${Math.max(4.5, repo.length + 0.5)}ch`,
-                    } as React.CSSProperties
-                }
-                placeholder="repo"
-            />
+            <div className="flex-1 flex items-center">
+                <span className="text-gray-400">https://</span>
+                <span className="line-through text-red-400">
+                    {config.githubHost}
+                </span>
+                <span className="text-green-400 font-bold">{config.host}</span>
+                <span className="text-gray-400">/</span>
+                <input
+                    ref={orgInputRef}
+                    type="text"
+                    value={org}
+                    onChange={handleOrgChange}
+                    onKeyDown={handleOrgKeyDown}
+                    spellCheck="false"
+                    className="bg-transparent text-gray-300 focus:outline-none border-b border-transparent focus:border-white/20 px-0.5 min-w-[3.5ch] w-[var(--org-width,3.5ch)]"
+                    style={
+                        {
+                            '--org-width': `${Math.max(3.5, org.length + 0.5)}ch`,
+                        } as React.CSSProperties
+                    }
+                    placeholder="org"
+                />
+                <span className="text-gray-400">/</span>
+                <input
+                    ref={repoInputRef}
+                    type="text"
+                    value={repo}
+                    onChange={handleRepoChange}
+                    onKeyDown={handleRepoKeyDown}
+                    spellCheck="false"
+                    className="bg-transparent text-gray-300 focus:outline-none focus:border-b focus:border-white/20 px-0.5 min-w-[4.5ch] w-[var(--repo-width,4.5ch)]"
+                    style={
+                        {
+                            '--repo-width': `${Math.max(4.5, repo.length + 0.5)}ch`,
+                        } as React.CSSProperties
+                    }
+                    placeholder="repo"
+                />
+            </div>
+            {error && (
+                <button
+                    onClick={onShowError}
+                    className="text-red-500 hover:text-red-400 transition-colors ml-2"
+                    aria-label="Show error details"
+                >
+                    <XCircle className="h-5 w-5" />
+                </button>
+            )}
         </div>
     )
 }

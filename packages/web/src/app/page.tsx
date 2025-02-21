@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ErrorDialog } from '@/components/error-dialog'
 import { UrlInput } from '@/components/url-input'
-import { Code2, XCircle } from 'lucide-react'
+import { Code2 } from 'lucide-react'
 
 import {
     clearAllRepositories,
@@ -26,13 +26,14 @@ type LoadingState =
 
 export default function Home() {
     const router = useRouter()
-    const [isValid, setIsValid] = useState(false)
     const [loadingState, setLoadingState] = useState<LoadingState>({
         type: 'idle',
     })
     const [error, setError] = useState<string | null>(null)
     const [isClearing, setIsClearing] = useState(false)
     const [showErrorDialog, setShowErrorDialog] = useState(false)
+    const [org, setOrg] = useState('')
+    const [repo, setRepo] = useState('')
 
     // Simulated loading progress
     useEffect(() => {
@@ -51,7 +52,7 @@ export default function Home() {
         return () => clearInterval(interval)
     }, [loadingState.type])
 
-    const handleLoadingStart = async (org: string, repo: string) => {
+    const handleLoadingStart = async () => {
         setError(null)
         setLoadingState({ type: 'loading', progress: 0 })
 
@@ -79,6 +80,34 @@ export default function Home() {
             const errorType = parseGitHubError(err, org, repo)
             setError(createErrorMessage(errorType))
             setLoadingState({ type: 'idle' })
+        }
+    }
+
+    const handleOrgChange = (value: string) => {
+        const cleanValue = value.replace(/^\/+/, '')
+        setOrg(cleanValue)
+        setError(null)
+        setShowErrorDialog(false)
+
+        // If user types a slash, split into org and repo
+        if (cleanValue.includes('/')) {
+            const [newOrg, newRepo] = cleanValue.split('/')
+            setOrg(newOrg)
+            setRepo(newRepo || '')
+        }
+    }
+
+    const handleRepoChange = (value: string) => {
+        setRepo(value)
+        setError(null)
+        setShowErrorDialog(false)
+    }
+
+    const isValid = org.length > 0 && repo.length > 0
+
+    const handleSubmit = async () => {
+        if (isValid) {
+            await handleLoadingStart()
         }
     }
 
@@ -173,43 +202,23 @@ export default function Home() {
                                                     </svg>
 
                                                     <UrlInput
-                                                        onValidityChange={
-                                                            setIsValid
+                                                        org={org}
+                                                        repo={repo}
+                                                        onOrgChange={
+                                                            handleOrgChange
                                                         }
-                                                        onLoadingStart={
-                                                            handleLoadingStart
+                                                        onRepoChange={
+                                                            handleRepoChange
                                                         }
-                                                        onInputChange={() => {
-                                                            setError(null)
+                                                        onSubmit={handleSubmit}
+                                                        error={error}
+                                                        onShowError={() =>
                                                             setShowErrorDialog(
-                                                                false,
+                                                                true,
                                                             )
-                                                        }}
+                                                        }
+                                                        isValid={isValid}
                                                     />
-                                                    <div className="absolute right-0 -bottom-6">
-                                                        <span
-                                                            className={`text-[11px] transition-opacity duration-200 ${
-                                                                isValid
-                                                                    ? 'text-gray-400'
-                                                                    : 'text-gray-600'
-                                                            }`}
-                                                        >
-                                                            press enter ↵
-                                                        </span>
-                                                    </div>
-                                                    {error && (
-                                                        <button
-                                                            onClick={() =>
-                                                                setShowErrorDialog(
-                                                                    true,
-                                                                )
-                                                            }
-                                                            className="absolute -right-10 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-400 transition-colors"
-                                                            aria-label="Show error details"
-                                                        >
-                                                            <XCircle className="h-6 w-6" />
-                                                        </button>
-                                                    )}
                                                 </div>
                                             ) : (
                                                 <div className="bg-[#1A1B1E] h-[44px] rounded-md flex items-center gap-3 shadow-sm border border-white/10 transition-all duration-500 w-full px-4">
@@ -277,10 +286,241 @@ export default function Home() {
                             </div>
 
                             {/* Hero Text */}
-                            <div className="text-center pt-12 pb-12 flex flex-col gap-1 items-center">
+                            <div className="text-center pt-12 pb-8 flex flex-col gap-1 items-center">
                                 <h1 className="text-5xl max-w-[800px] font-bold tracking-tight leading-normal bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
                                     Assisted Repository Exploration
                                 </h1>
+                            </div>
+
+                            {/* Split View Demo */}
+                            <div className="max-w-3xl mx-auto px-6 pb-8">
+                                <div className="grid grid-cols-2 gap-6">
+                                    {/* Left: Repository Explorer */}
+                                    <div className="bg-[#1A1B1E] rounded-lg border border-white/10 overflow-hidden">
+                                        {/* Explorer Header */}
+                                        <div className="bg-[#2A2B2E] px-4 py-2.5 border-b border-white/10 flex items-center gap-2">
+                                            <svg
+                                                className="w-4 h-4 text-gray-400"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth="2"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M12 4.5v15m7.5-7.5h-15"
+                                                />
+                                            </svg>
+                                            <span className="text-sm text-gray-300 font-medium">
+                                                Project
+                                            </span>
+                                        </div>
+                                        {/* File Tree */}
+                                        <div className="p-2 text-sm font-mono">
+                                            <div className="hover:bg-white/5 rounded">
+                                                <div className="flex items-center gap-1.5 py-1 px-2">
+                                                    <svg
+                                                        className="w-4 h-4 text-gray-400"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        strokeWidth="2"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                        />
+                                                    </svg>
+                                                    <span className="text-gray-300">
+                                                        src
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="hover:bg-white/5 rounded">
+                                                    <div className="flex items-center gap-1.5 py-1 px-2 pl-6">
+                                                        <svg
+                                                            className="w-4 h-4 text-gray-400"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            strokeWidth="2"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                            />
+                                                        </svg>
+                                                        <span className="text-gray-300">
+                                                            components
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="hover:bg-white/5 rounded">
+                                                        <div className="flex items-center gap-1.5 py-1 px-2 pl-12">
+                                                            <span className="text-blue-400">
+                                                                Button.tsx
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="hover:bg-white/5 rounded">
+                                                        <div className="flex items-center gap-1.5 py-1 px-2 pl-12">
+                                                            <span className="text-blue-400">
+                                                                Card.tsx
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="hover:bg-white/5 rounded">
+                                                        <div className="flex items-center gap-1.5 py-1 px-2 pl-12">
+                                                            <span className="text-blue-400">
+                                                                Input.tsx
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="hover:bg-white/5 rounded">
+                                                    <div className="flex items-center gap-1.5 py-1 px-2 pl-6">
+                                                        <svg
+                                                            className="w-4 h-4 text-gray-400"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            strokeWidth="2"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                            />
+                                                        </svg>
+                                                        <span className="text-gray-300">
+                                                            lib
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="hover:bg-white/5 rounded">
+                                                        <div className="flex items-center gap-1.5 py-1 px-2 pl-12">
+                                                            <span className="text-blue-400">
+                                                                api.ts
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="hover:bg-white/5 rounded">
+                                                        <div className="flex items-center gap-1.5 py-1 px-2 pl-12">
+                                                            <span className="text-blue-400">
+                                                                utils.ts
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-white/5 rounded">
+                                                    <div className="flex items-center gap-1.5 py-1 px-2 pl-6">
+                                                        <span className="text-blue-400">
+                                                            App.tsx
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="hover:bg-white/5 rounded">
+                                                    <div className="flex items-center gap-1.5 py-1 px-2 pl-6">
+                                                        <span className="text-blue-400">
+                                                            index.ts
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Features Grid */}
+                                    <div className="grid grid-rows-3 gap-4">
+                                        <div className="bg-[#1A1B1E] rounded-lg border border-white/10 p-4 flex items-start gap-3">
+                                            <div className="w-8 h-8 rounded-md bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                                                <svg
+                                                    className="w-4 h-4 text-green-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    strokeWidth="2"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-medium text-gray-200">
+                                                    Instant Access
+                                                </h3>
+                                                <p className="text-sm text-gray-400 mt-1">
+                                                    No cloning or setup
+                                                    required. Start exploring
+                                                    code immediately.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-[#1A1B1E] rounded-lg border border-white/10 p-4 flex items-start gap-3">
+                                            <div className="w-8 h-8 rounded-md bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                                                <svg
+                                                    className="w-4 h-4 text-purple-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    strokeWidth="2"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-medium text-gray-200">
+                                                    AI Assistant
+                                                </h3>
+                                                <p className="text-sm text-gray-400 mt-1">
+                                                    Get intelligent insights and
+                                                    explanations about any piece
+                                                    of code.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-[#1A1B1E] rounded-lg border border-white/10 p-4 flex items-start gap-3">
+                                            <div className="w-8 h-8 rounded-md bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                                                <svg
+                                                    className="w-4 h-4 text-orange-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    strokeWidth="2"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-medium text-gray-200">
+                                                    LLM-Ready Export
+                                                </h3>
+                                                <p className="text-sm text-gray-400 mt-1">
+                                                    Copy the entire repository
+                                                    in a format optimized for AI
+                                                    prompts and analysis.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Instruction Text */}
