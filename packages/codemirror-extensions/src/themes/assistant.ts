@@ -492,11 +492,6 @@ export const assistantTheme: ExtensionTheme = {
                 },
             },
         },
-        '.cm-ext-assistant-header-border': {
-            height: '1px',
-            background: 'var(--cm-ext-assistant-border)',
-            margin: '-2px 0 12px',
-        },
         '.cm-ext-assistant-tabs-group': {
             display: 'flex',
             alignItems: 'center',

@@ -304,12 +304,6 @@ function renderSettingsPanel(dom: HTMLElement, view: EditorView) {
     headerContainer.appendChild(backButton)
     dom.appendChild(headerContainer)
 
-    // Add border right after header
-    const headerBorder = crelt('div', {
-        class: 'cm-ext-assistant-header-border',
-    })
-    dom.appendChild(headerBorder)
-
     // Description
     const description = crelt(
         'div',
