@@ -2,6 +2,10 @@
     "name": "repoview",
     "private": true,
     "type": "module",
+    "scripts": {
+        "build": "bun install && cd packages/codemirror-extensions && bun run build && cd ../web && bun run build",
+        "deploy": "cd packages/server && bun run deploy"
+    },
     "workspaces": [
         "packages/*"
     ],

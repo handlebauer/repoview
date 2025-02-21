@@ -1,5 +1,5 @@
 {
-    "buildCommand": "cd ../.. && bun install && cd packages/web && bun run build",
-    "installCommand": "cd ../.. && bun install && cd packages/codemirror-extensions && bun run build",
+    "buildCommand": "cd ../.. && bun run build",
+    "installCommand": "cd ../.. && bun install",
     "outputDirectory": ".next"
 }
