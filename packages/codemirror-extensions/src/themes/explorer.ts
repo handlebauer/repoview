@@ -146,6 +146,43 @@ export const explorerTheme: ExtensionTheme = {
             padding: '4px 8px 3px 10px',
             letterSpacing: 'var(--cm-ext-explorer-header-letter-spacing)',
             color: 'var(--cm-ext-explorer-text-header)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+        },
+
+        '.cm-ext-explorer-header-title': {
+            display: 'inline-block',
+        },
+
+        '.cm-ext-explorer-header-copy': {
+            background: 'none',
+            border: 'none',
+            padding: '4px',
+            width: '20px',
+            height: '20px',
+            cursor: 'pointer',
+            color: 'var(--cm-ext-explorer-text)',
+            opacity: '0.5',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+
+            '&:hover': {
+                opacity: '0.8',
+            },
+
+            '&.success': {
+                color: '#4ade80',
+                opacity: '1',
+            },
+
+            '& svg': {
+                width: '14px',
+                height: '14px',
+            },
         },
 
         '.cm-ext-explorer-directory span': {

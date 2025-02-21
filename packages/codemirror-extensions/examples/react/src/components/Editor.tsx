@@ -29,11 +29,7 @@ export function Editor() {
 
     useEffect(() => {
         // Update project name after 5 seconds
-        const timer = setTimeout(() => {
-            updateProjectName('Updated Project Name')
-        }, 5000)
-
-        return () => clearTimeout(timer)
+        updateProjectName('Updated Project Name')
     }, [updateProjectName])
 
     return (

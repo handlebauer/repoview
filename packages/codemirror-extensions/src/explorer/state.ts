@@ -99,6 +99,70 @@ export const fileExplorerState = StateField.define<FileExplorerState>({
     },
 })
 
+function generateFileTree(files: File[]): string {
+    interface TreeNode {
+        [key: string]: TreeNode
+    }
+    const tree: TreeNode = {}
+
+    // Build tree structure
+    files
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach(file => {
+            const parts = file.name.split('/')
+            let current = tree
+            parts.forEach(part => {
+                if (!(part in current)) {
+                    current[part] = {}
+                }
+                current = current[part]
+            })
+        })
+
+    // Generate tree visualization
+    function renderTree(node: TreeNode, prefix: string = ''): string {
+        const entries = Object.entries(node)
+        const dirs = entries
+            .filter(([, value]) => Object.keys(value).length > 0)
+            .sort(([a], [b]) => a.localeCompare(b))
+        const files = entries
+            .filter(([, value]) => Object.keys(value).length === 0)
+            .sort(([a], [b]) => a.localeCompare(b))
+
+        const sortedEntries = [...dirs, ...files]
+        if (sortedEntries.length === 0) return ''
+
+        let result = ''
+        sortedEntries.forEach(([name, subNode], index) => {
+            const isLastEntry = index === sortedEntries.length - 1
+            const connector = isLastEntry ? '└──' : '├──'
+            const line = `${prefix}${connector} ${name}\n`
+            const nextPrefix = prefix + (isLastEntry ? '    ' : '│   ')
+            result += line
+            if (!isLastEntry || Object.keys(subNode).length > 0) {
+                result += renderTree(subNode, nextPrefix)
+            }
+        })
+        return result
+    }
+
+    const treeContent = renderTree(tree).trimEnd()
+    return '<file_map>\n' + treeContent + '\n</file_map>\n'
+}
+
+function generateFileContents(files: File[]): string {
+    const content = files
+        .map(file => {
+            const ext = file.name.split('.').pop() || ''
+            const trimmedContent = file.content.trim()
+            return `File: ${file.name}\n\`\`\`${ext}\n${trimmedContent}\n\`\`\``
+        })
+        .join('\n\n')
+        .trimEnd()
+
+    return '<file_contents>\n' + content + '\n</file_contents>'
+}
+
 // Create Panel Specification
 export const fileExplorerPanelSpec = {
     id: 'file-explorer',
@@ -119,11 +183,47 @@ export const fileExplorerPanelSpec = {
 // Helper function to render the explorer
 function renderFileExplorer(dom: HTMLElement, view: EditorView) {
     const explorerState = view.state.field(fileExplorerState)
+
+    // Create header with copy button
+    const headerContent = crelt(
+        'span',
+        { class: styles.explorerHeaderTitle },
+        explorerState.projectName || 'Files',
+    )
+
+    const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
+    const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+
+    const copyButton = crelt('button', {
+        class: styles.explorerHeaderCopy,
+        title: 'Copy Repository',
+        onclick: (e: MouseEvent) => {
+            const btn = e.currentTarget as HTMLButtonElement
+            const fileTree = generateFileTree(explorerState.files)
+            const fileContents = generateFileContents(explorerState.files)
+
+            navigator.clipboard
+                .writeText(fileTree + fileContents)
+                .then(() => {
+                    btn.innerHTML = checkIcon
+                    btn.classList.add('success')
+                    setTimeout(() => {
+                        btn.innerHTML = copyIcon
+                        btn.classList.remove('success')
+                    }, 3000)
+                })
+                .catch(err => console.error('Failed to copy:', err))
+        },
+    })
+    copyButton.innerHTML = copyIcon
+
     const header = crelt(
         'h3',
         { class: styles.explorerHeader },
-        explorerState.projectName || 'Files',
+        headerContent,
+        copyButton,
     )
+
     const fileList = crelt('ul', { class: styles.explorerList })
 
     // Build and render file tree

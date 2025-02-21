@@ -13,6 +13,8 @@ export const styles = {
     directoryCaret: 'cm-ext-explorer-caret',
     directoryCaretExpanded: 'cm-ext-explorer-caret-expanded',
     explorerHeader: 'cm-ext-explorer-header',
+    explorerHeaderTitle: 'cm-ext-explorer-header-title',
+    explorerHeaderCopy: 'cm-ext-explorer-header-copy',
     explorerIcon: 'cm-ext-explorer-icon',
 }
 
