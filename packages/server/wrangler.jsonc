@@ -4,12 +4,12 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "test-do-server",
+	"name": "repoview-server",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-02-14",
 	"migrations": [
 		{
-			"new_classes": ["MyFirstDurableObject"],
+			"new_classes": ["GitHubRepoDO"],
 			"tag": "v1",
 		},
 	],
@@ -43,7 +43,8 @@
 	 */
 	"vars": {},
 	/**
-	 * Note: Use secrets to store sensitive data.
+	 * Note: The GITHUB_TOKEN secret should be set using:
+	 * wrangler secret put GITHUB_TOKEN
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
 
