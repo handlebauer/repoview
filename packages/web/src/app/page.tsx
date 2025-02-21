@@ -43,9 +43,24 @@ export default function Home() {
         const interval = setInterval(() => {
             setLoadingState(current => {
                 if (current.type !== 'loading') return current
-                // Slow down progress as it gets closer to 90%
-                const increment = Math.max(0.5, (90 - current.progress) / 10)
-                const progress = Math.min(90, current.progress + increment)
+
+                // Calculate dynamic increment based on current progress
+                let increment
+                if (current.progress < 60) {
+                    // Move quickly up to 60%
+                    increment = Math.max(1, (60 - current.progress) / 8)
+                } else if (current.progress < 85) {
+                    // Slow down between 60-85%
+                    increment = Math.max(0.4, (85 - current.progress) / 15)
+                } else if (current.progress < 98) {
+                    // Very slow progress from 85-98%
+                    increment = Math.max(0.1, (98 - current.progress) / 30)
+                } else {
+                    // Tiny increments after 98% to maintain motion
+                    increment = 0.01
+                }
+
+                const progress = Math.min(99.9, current.progress + increment)
                 return { type: 'loading', progress }
             })
         }, 100)
