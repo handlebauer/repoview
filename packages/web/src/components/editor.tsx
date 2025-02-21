@@ -3,8 +3,8 @@
 import { memo, useMemo } from 'react'
 import { useEditor } from '@repoview/codemirror-extensions/hooks'
 
-import type { Repository } from '@/lib/db'
 import type { EditorConfig } from '@repoview/codemirror-extensions/hooks'
+import type { Repository } from '@repoview/common'
 
 interface EditorProps {
     org: string
