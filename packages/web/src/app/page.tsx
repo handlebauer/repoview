@@ -184,7 +184,7 @@ export default function Home() {
 
             {/* Main Content */}
             <main className="h-[calc(100vh-56px)] relative overflow-hidden">
-                <div className="mx-auto max-w-7xl px-6 pt-[15vh] h-full">
+                <div className="mx-auto max-w-7xl px-6 pt-[13vh] h-full">
                     {/* Browser Window Mockup */}
                     <div className="relative max-w-4xl mx-auto animate-fade-up h-full">
                         {/* Browser Chrome */}
@@ -305,7 +305,7 @@ export default function Home() {
                             </div>
 
                             {/* Hero Text */}
-                            <div className="text-center pt-12 pb-8 flex flex-col gap-1 items-center">
+                            <div className="text-center pt-8 pb-8 flex flex-col gap-1 items-center">
                                 <h1 className="text-5xl max-w-[800px] font-bold tracking-tight leading-normal bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
                                     Assisted Repository Exploration
                                 </h1>
