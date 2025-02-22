@@ -184,7 +184,7 @@ export default function Home() {
 
             {/* Main Content */}
             <main className="h-[calc(100vh-56px)] relative overflow-hidden">
-                <div className="mx-auto max-w-7xl px-6 pt-48 h-full">
+                <div className="mx-auto max-w-7xl px-6 pt-[15vh] h-full">
                     {/* Browser Window Mockup */}
                     <div className="relative max-w-4xl mx-auto animate-fade-up h-full">
                         {/* Browser Chrome */}
